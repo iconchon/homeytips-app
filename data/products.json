@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "title": "Ultimate Financial Dashboard",
+    "price": 49000,
+    "category": "Finance",
+    "description": "Template Google Sheet lengkap untuk melacak pemasukan, pengeluaran, dan net worth Anda secara otomatis.",
+    "features": ["Dashboard Visual", "Expense Tracker", "Investment Portfolio", "Debt Snowball"],
+    "image": "financial-sheet"
+  },
+  {
+    "id": 2,
+    "title": "Meal Prep Master 2024",
+    "price": 29000,
+    "category": "Food",
+    "description": "Rencanakan menu makanan sebulan penuh, otomatis generate daftar belanjaan.",
+    "features": ["Database Resep", "Auto Shopping List", "Kalori Tracker", "Food Waste Manager"],
+    "image": "meal-sheet"
+  },
+  {
+    "id": 3,
+    "title": "Umrah & Hajj Planner",
+    "price": 35000,
+    "category": "Travel",
+    "description": "Hitung estimasi biaya, tabungan bulanan, dan checklist perlengkapan ibadah.",
+    "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Doa Harian"],
+    "image": "umrah-sheet"
+  }
+]
