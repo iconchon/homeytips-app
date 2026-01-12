@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Siti Aminah",
+    "role": "Ibu Rumah Tangga",
+    "text": "Template Meal Prep-nya sangat membantu! Saya jadi hemat waktu belanja dan tidak bingung mau masak apa.",
+    "rating": 5
+  },
+  {
+    "id": 2,
+    "name": "Budi Santoso",
+    "role": "Freelancer",
+    "text": "Financial Dashboard-nya rapi banget. Akhirnya saya bisa tracking cashflow bulanan dengan jelas.",
+    "rating": 5
+  },
+  {
+    "id": 3,
+    "name": "Rina & Dimas",
+    "role": "Pasangan Muda",
+    "text": "Kami pakai Umrah Planner untuk target berangkat tahun depan. Perhitungannya detail sekali.",
+    "rating": 4
+  }
+]
