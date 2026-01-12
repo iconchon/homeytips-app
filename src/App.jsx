@@ -37,7 +37,12 @@ const Styles = () => (
 
 // --- GEMINI API HELPER ---
 const callGeminiAPI = async (prompt) => {
-  const apiKey = ""; // API Key disediakan oleh environment runtime
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || ""; // API Key disediakan oleh environment runtime
+  
+  if (!apiKey) {
+    return "⚠️ API Key belum diset. Hubungi admin untuk aktivasi fitur AI.";
+  }
+
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
@@ -409,10 +414,10 @@ const App = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const prodRes = await fetch('./data/products.json');
+        const prodRes = await fetch(`${import.meta.env.BASE_URL}data/products.json`);
         if (!prodRes.ok) throw new Error('Network response was not ok');
         const prodData = await prodRes.json();
-        const testiRes = await fetch('./data/testimonials.json');
+        const testiRes = await fetch(`${import.meta.env.BASE_URL}data/testimonials.json`);
         const testiData = await testiRes.json();
         setProducts(prodData);
         setTestimonials(testiData);
