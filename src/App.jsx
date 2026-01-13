@@ -18,7 +18,9 @@ import {
   Sparkles,
   ChefHat,
   TrendingUp,
-  Map
+  Map,
+  Clock,
+  MapPin
 } from 'lucide-react';
 
 // --- STYLES ---
@@ -30,8 +32,12 @@ const Styles = () => (
     }
     .animate-fade-in-up { animation: fadeInUp 0.3s ease-out; }
     body { background-color: #f9fafb; }
-    .markdown-prose ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
-    .markdown-prose ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+    
+    /* Styling khusus untuk hasil render AI */
+    .ai-result ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+    .ai-result ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+    .ai-result li { margin-bottom: 0.25rem; }
+    .ai-result strong { font-weight: 700; color: #1e3a8a; } /* Biru tua untuk highlight */
   `}</style>
 );
 
@@ -42,7 +48,7 @@ const callGeminiAPI = async (prompt) => {
   if (!apiKey) {
     return "⚠️ API Key belum diset. Hubungi admin untuk aktivasi fitur AI.";
   }
-
+  
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
@@ -61,6 +67,66 @@ const callGeminiAPI = async (prompt) => {
     return "Terjadi kesalahan koneksi saat menghubungi AI.";
   }
 };
+
+// --- HELPER: FORMATTER TEXT AI ---
+// Fungsi ini mengubah teks markdown menjadi elemen React yang rapi
+// UPDATE: Menangani #, ##, ### dan membersihkan tabel
+const AIResponseRenderer = ({ text }) => {
+  if (!text) return null;
+
+  // Split text per baris
+  const lines = text.split('\n');
+
+  return (
+    <div className="ai-result text-sm leading-relaxed text-gray-800">
+      {lines.map((line, index) => {
+        let content = line.trim();
+        
+        if (!content) return <br key={index} />;
+
+        // 1. Handle Markdown Headings (#, ##, ###)
+        // Mengubah # Judul menjadi teks tebal biasa tanpa simbol pagar
+        if (content.startsWith('#')) {
+            content = content.replace(/^#+\s*/, ''); // Hapus tanda # di awal
+            return <h4 key={index} className="font-bold text-blue-900 mt-3 mb-1 text-base">{content}</h4>;
+        }
+
+        // 2. Handle Markdown Tables (Fallback Cleaning)
+        // Jika masih ada baris tabel (| sel | sel |), kita bersihkan pipanya agar jadi teks biasa
+        if (content.startsWith('|')) {
+             content = content.replace(/\|/g, ' ').trim(); // Ganti | dengan spasi
+        }
+
+        // 3. Deteksi List Item (* atau -)
+        const isListItem = content.startsWith('* ') || content.startsWith('- ');
+        if (isListItem) {
+          content = content.substring(2); // Hapus simbol list di awal
+        }
+
+        // 4. Parsing Bolding (**teks**)
+        const parts = content.split(/(\*\*.*?\*\*)/g);
+        const formattedContent = parts.map((part, i) => {
+          if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i}>{part.slice(2, -2)}</strong>;
+          }
+          return part;
+        });
+
+        if (isListItem) {
+          return (
+            <div key={index} className="flex items-start mb-1">
+              <span className="mr-2 text-blue-500 min-w-[10px]">•</span>
+              <span>{formattedContent}</span>
+            </div>
+          );
+        }
+
+        return <p key={index} className="mb-2">{formattedContent}</p>;
+      })}
+    </div>
+  );
+};
+
 
 // --- COMPONENTS ---
 
@@ -149,13 +215,14 @@ const FinancialTool = () => {
     const savings = inc - exp;
     const ratio = inc > 0 ? (savings / inc) * 100 : 0;
     setResult({ savings, ratio });
-    setAdvice(''); // Reset advice when recalculating
+    setAdvice(''); 
   };
 
   const askAI = async () => {
     if (!result) return;
     setLoading(true);
-    const prompt = `Saya memiliki pemasukan Rp${income} dan pengeluaran Rp${expense}. Sisa uang Rp${result.savings} (Ratio tabungan ${result.ratio.toFixed(1)}%). Berikan 3 tips singkat, praktis, dan ramah untuk mengoptimalkan keuangan saya agar lebih sehat. Gunakan format poin.`;
+    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
+    const prompt = `Saya memiliki pemasukan Rp${income} dan pengeluaran Rp${expense}. Sisa uang Rp${result.savings} (Ratio tabungan ${result.ratio.toFixed(1)}%). Berikan 3 tips singkat, praktis, dan ramah untuk mengoptimalkan keuangan saya agar lebih sehat. Gunakan format poin. WAJIB Jawab menggunakan Bahasa Indonesia. JANGAN gunakan format tabel atau heading markdown (#). Cukup bullet points biasa.`;
     const response = await callGeminiAPI(prompt);
     setAdvice(response);
     setLoading(false);
@@ -194,9 +261,9 @@ const FinancialTool = () => {
         )}
 
         {advice && (
-          <div className="bg-indigo-50 p-4 rounded-md text-sm text-indigo-900 markdown-prose animate-fade-in-up">
-            <h4 className="font-bold mb-2 flex items-center"><Sparkles className="w-3 h-3 mr-1 text-indigo-500"/> Saran AI:</h4>
-            <div style={{ whiteSpace: 'pre-line' }}>{advice}</div>
+          <div className="bg-indigo-50 p-4 rounded-md animate-fade-in-up border border-indigo-100">
+            <h4 className="font-bold mb-3 flex items-center text-indigo-800"><Sparkles className="w-4 h-4 mr-1 text-indigo-500"/> Saran AI:</h4>
+            <AIResponseRenderer text={advice} />
           </div>
         )}
       </div>
@@ -208,6 +275,12 @@ const UmrahTool = () => {
   const [target, setTarget] = useState(30000000);
   const [saving, setSaving] = useState('');
   const [months, setMonths] = useState(null);
+  
+  // New States for Planning
+  const [tripType, setTripType] = useState('Umrah');
+  const [destination, setDestination] = useState(''); // Untuk custom destination jika Liburan
+  const [duration, setDuration] = useState('9');
+  
   const [itinerary, setItinerary] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -220,7 +293,16 @@ const UmrahTool = () => {
 
   const generateItinerary = async () => {
     setLoading(true);
-    const prompt = `Buatkan rencana perjalanan (itinerary) singkat untuk Umrah selama 9 hari. Fokus pada kegiatan ibadah utama di Mekkah dan Madinah. Berikan dalam format list hari per hari yang ringkas.`;
+    let destinationText = tripType === 'Umrah' ? 'Umrah (Mekkah & Madinah)' : destination;
+    
+    // Validasi sederhana
+    if (tripType === 'Liburan' && !destination.trim()) {
+        destinationText = "Destinasi Liburan Populer (Jepang/Korea)";
+    }
+
+    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
+    const prompt = `Buatkan rencana perjalanan (itinerary) untuk ${destinationText} selama ${duration} hari. Berikan poin-poin kegiatan utama per hari secara ringkas dan padat. Fokus pada tempat wajib dikunjungi. Gunakan Bahasa Indonesia sepenuhnya. Format list hari demi hari. JANGAN gunakan format tabel atau heading markdown (#).`;
+    
     const response = await callGeminiAPI(prompt);
     setItinerary(response);
     setLoading(false);
@@ -230,36 +312,84 @@ const UmrahTool = () => {
     <div className="bg-white p-6 rounded-xl shadow-md border border-blue-100 h-full flex flex-col">
       <div className="flex items-center mb-4 text-blue-600">
         <Plane className="w-6 h-6 mr-2" />
-        <h3 className="text-xl font-bold">Planner Umrah & Liburan</h3>
+        <h3 className="text-xl font-bold">Planner Perjalanan</h3>
       </div>
       <div className="space-y-4 flex-grow">
+        
+        {/* Destination Selection */}
+        <div className="grid grid-cols-2 gap-3">
+            <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Tipe Perjalanan</label>
+                <select 
+                    value={tripType} 
+                    onChange={(e) => setTripType(e.target.value)}
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm"
+                >
+                    <option value="Umrah">Umrah</option>
+                    <option value="Liburan">Liburan</option>
+                </select>
+            </div>
+            <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Durasi (Hari)</label>
+                <div className="relative">
+                    <input 
+                        type="number" 
+                        value={duration} 
+                        onChange={(e) => setDuration(e.target.value)} 
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm pl-8"
+                    />
+                    <Clock className="w-4 h-4 text-gray-400 absolute left-2 top-2.5" />
+                </div>
+            </div>
+        </div>
+
+        {/* Custom Destination Input (Shown only if Liburan) */}
+        {tripType === 'Liburan' && (
+            <div className="animate-fade-in-up">
+                 <label className="block text-xs font-medium text-gray-700 mb-1">Tujuan Liburan</label>
+                 <div className="relative">
+                    <input 
+                        type="text" 
+                        value={destination} 
+                        onChange={(e) => setDestination(e.target.value)} 
+                        placeholder="Contoh: Jepang, Bali, Turki..."
+                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm pl-8" 
+                    />
+                    <MapPin className="w-4 h-4 text-gray-400 absolute left-2 top-2.5" />
+                 </div>
+            </div>
+        )}
+
+        <hr className="border-gray-100"/>
+
+        {/* Financial Calculator Part */}
         <div>
-          <label className="block text-sm font-medium text-gray-700">Target Dana (Rp)</label>
-          <input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2" />
+          <label className="block text-xs font-medium text-gray-700 mb-1">Target Dana (Rp)</label>
+          <input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700">Tabungan / Bulan</label>
-          <input type="number" value={saving} onChange={(e) => setSaving(e.target.value)} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2" placeholder="1000000" />
+          <label className="block text-xs font-medium text-gray-700 mb-1">Tabungan / Bulan</label>
+          <input type="number" value={saving} onChange={(e) => setSaving(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm" placeholder="1000000" />
         </div>
         
-        <div className="grid grid-cols-2 gap-2">
-            <button onClick={calculate} className="bg-blue-100 text-blue-700 py-2 rounded-md hover:bg-blue-200 font-medium text-sm">Hitung Estimasi</button>
-            <button onClick={generateItinerary} disabled={loading} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 rounded-md hover:from-purple-700 hover:to-indigo-700 font-medium text-sm flex items-center justify-center">
-                {loading ? <Loader className="w-4 h-4 animate-spin" /> : <><Map className="w-4 h-4 mr-1" /> Info Itinerary</>}
+        <div className="grid grid-cols-2 gap-2 mt-2">
+            <button onClick={calculate} className="bg-blue-100 text-blue-700 py-2 rounded-md hover:bg-blue-200 font-medium text-xs">Hitung Tabungan</button>
+            <button onClick={generateItinerary} disabled={loading} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-2 rounded-md hover:from-purple-700 hover:to-indigo-700 font-medium text-xs flex items-center justify-center">
+                {loading ? <Loader className="w-3 h-3 animate-spin" /> : <><Map className="w-3 h-3 mr-1" /> Buat Itinerary</>}
             </button>
         </div>
         
-        {months && !itinerary && (
-          <div className="p-4 bg-blue-50 text-blue-900 rounded-md animate-fade-in-up">
-            <p className="text-sm">Estimasi berangkat:</p>
-            <p className="text-2xl font-bold">{months} Bulan</p>
+        {months && (
+          <div className="p-3 bg-blue-50 text-blue-900 rounded-md animate-fade-in-up mt-2 text-center">
+            <p className="text-xs text-gray-500">Bisa berangkat dalam:</p>
+            <p className="text-lg font-bold">{months} Bulan</p>
           </div>
         )}
 
         {itinerary && (
-            <div className="bg-purple-50 p-4 rounded-md text-sm text-purple-900 markdown-prose animate-fade-in-up max-h-60 overflow-y-auto">
-                 <h4 className="font-bold mb-2 flex items-center"><Sparkles className="w-3 h-3 mr-1 text-purple-500"/> Contoh Itinerary 9 Hari:</h4>
-                 <div style={{ whiteSpace: 'pre-line' }}>{itinerary}</div>
+            <div className="bg-purple-50 p-4 rounded-md border border-purple-100 animate-fade-in-up max-h-60 overflow-y-auto mt-4">
+                 <h4 className="font-bold mb-3 flex items-center text-purple-800 text-sm"><Sparkles className="w-3 h-3 mr-1 text-purple-500"/> Rencana {tripType} {duration} Hari:</h4>
+                 <AIResponseRenderer text={itinerary} />
             </div>
         )}
       </div>
@@ -275,7 +405,8 @@ const MealTool = () => {
   const generateRecipe = async () => {
     if (!ingredients.trim()) return;
     setLoading(true);
-    const prompt = `Saya punya bahan-bahan ini di kulkas: ${ingredients}. Tolong buatkan SATU ide resep masakan Indonesia yang lezat, hemat, dan mudah dibuat menggunakan bahan tersebut (boleh tambah bumbu dasar). Sertakan nama masakan dan cara masak singkat.`;
+    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
+    const prompt = `Saya punya bahan-bahan ini di kulkas: ${ingredients}. Tolong buatkan SATU ide resep masakan Indonesia yang lezat, hemat, dan mudah dibuat menggunakan bahan tersebut. Sertakan nama masakan dan cara masak singkat. Jawab dalam Bahasa Indonesia. JANGAN gunakan format tabel atau heading markdown (#).`;
     const response = await callGeminiAPI(prompt);
     setRecipe(response);
     setLoading(false);
@@ -307,8 +438,8 @@ const MealTool = () => {
         </button>
 
         {recipe && (
-             <div className="bg-orange-50 p-4 rounded-md text-sm text-orange-900 markdown-prose animate-fade-in-up max-h-60 overflow-y-auto border border-orange-100">
-                <div style={{ whiteSpace: 'pre-line' }}>{recipe}</div>
+             <div className="bg-orange-50 p-4 rounded-md border border-orange-100 animate-fade-in-up max-h-60 overflow-y-auto">
+                <AIResponseRenderer text={recipe} />
             </div>
         )}
       </div>
@@ -414,10 +545,10 @@ const App = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const prodRes = await fetch(`${import.meta.env.BASE_URL}data/products.json`);
+        const prodRes = await fetch('./data/products.json');
         if (!prodRes.ok) throw new Error('Network response was not ok');
         const prodData = await prodRes.json();
-        const testiRes = await fetch(`${import.meta.env.BASE_URL}data/testimonials.json`);
+        const testiRes = await fetch('./data/testimonials.json');
         const testiData = await testiRes.json();
         setProducts(prodData);
         setTestimonials(testiData);
