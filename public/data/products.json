@@ -25,5 +25,15 @@
     "description": "Hitung estimasi biaya, tabungan bulanan, dan checklist perlengkapan ibadah.",
     "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Doa Harian"],
     "image": "umrah-sheet"
+  },
+
+  {
+    "id": 3,
+    "title": "Holiday Planner",
+    "price": 35000,
+    "category": "Travel",
+    "description": "Hitung estimasi biaya, tabungan bulanan, dan checklist Liburan Menyenangkan.",
+    "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Tips"],
+    "image": "/img-holiday-planner-2026.png"
   }
 ]
