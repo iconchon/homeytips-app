@@ -20,7 +20,8 @@ import {
   TrendingUp,
   Map,
   Clock,
-  MapPin
+  MapPin,
+  Image as ImageIcon
 } from 'lucide-react';
 
 // --- STYLES ---
@@ -37,7 +38,7 @@ const Styles = () => (
     .ai-result ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
     .ai-result ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
     .ai-result li { margin-bottom: 0.25rem; }
-    .ai-result strong { font-weight: 700; color: #1e3a8a; } /* Biru tua untuk highlight */
+    .ai-result strong { font-weight: 700; color: #1e3a8a; }
   `}</style>
 );
 
@@ -48,7 +49,7 @@ const callGeminiAPI = async (prompt) => {
   if (!apiKey) {
     return "⚠️ API Key belum diset. Hubungi admin untuk aktivasi fitur AI.";
   }
-  
+
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
@@ -200,7 +201,7 @@ const Hero = ({ setView }) => (
   </div>
 );
 
-// --- TOOLS SECTION COMPONENTS (ENHANCED WITH AI) ---
+// --- TOOLS SECTION COMPONENTS ---
 
 const FinancialTool = () => {
   const [income, setIncome] = useState('');
@@ -221,7 +222,6 @@ const FinancialTool = () => {
   const askAI = async () => {
     if (!result) return;
     setLoading(true);
-    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
     const prompt = `Saya memiliki pemasukan Rp${income} dan pengeluaran Rp${expense}. Sisa uang Rp${result.savings} (Ratio tabungan ${result.ratio.toFixed(1)}%). Berikan 3 tips singkat, praktis, dan ramah untuk mengoptimalkan keuangan saya agar lebih sehat. Gunakan format poin. WAJIB Jawab menggunakan Bahasa Indonesia. JANGAN gunakan format tabel atau heading markdown (#). Cukup bullet points biasa.`;
     const response = await callGeminiAPI(prompt);
     setAdvice(response);
@@ -278,7 +278,7 @@ const UmrahTool = () => {
   
   // New States for Planning
   const [tripType, setTripType] = useState('Umrah');
-  const [destination, setDestination] = useState(''); // Untuk custom destination jika Liburan
+  const [destination, setDestination] = useState(''); 
   const [duration, setDuration] = useState('9');
   
   const [itinerary, setItinerary] = useState('');
@@ -295,12 +295,10 @@ const UmrahTool = () => {
     setLoading(true);
     let destinationText = tripType === 'Umrah' ? 'Umrah (Mekkah & Madinah)' : destination;
     
-    // Validasi sederhana
     if (tripType === 'Liburan' && !destination.trim()) {
         destinationText = "Destinasi Liburan Populer (Jepang/Korea)";
     }
 
-    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
     const prompt = `Buatkan rencana perjalanan (itinerary) untuk ${destinationText} selama ${duration} hari. Berikan poin-poin kegiatan utama per hari secara ringkas dan padat. Fokus pada tempat wajib dikunjungi. Gunakan Bahasa Indonesia sepenuhnya. Format list hari demi hari. JANGAN gunakan format tabel atau heading markdown (#).`;
     
     const response = await callGeminiAPI(prompt);
@@ -316,7 +314,6 @@ const UmrahTool = () => {
       </div>
       <div className="space-y-4 flex-grow">
         
-        {/* Destination Selection */}
         <div className="grid grid-cols-2 gap-3">
             <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">Tipe Perjalanan</label>
@@ -343,7 +340,6 @@ const UmrahTool = () => {
             </div>
         </div>
 
-        {/* Custom Destination Input (Shown only if Liburan) */}
         {tripType === 'Liburan' && (
             <div className="animate-fade-in-up">
                  <label className="block text-xs font-medium text-gray-700 mb-1">Tujuan Liburan</label>
@@ -362,7 +358,6 @@ const UmrahTool = () => {
 
         <hr className="border-gray-100"/>
 
-        {/* Financial Calculator Part */}
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Target Dana (Rp)</label>
           <input type="number" value={target} onChange={(e) => setTarget(e.target.value)} className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50 p-2 text-sm" />
@@ -405,7 +400,6 @@ const MealTool = () => {
   const generateRecipe = async () => {
     if (!ingredients.trim()) return;
     setLoading(true);
-    // UPDATE: Prompt dipertegas untuk tidak menggunakan heading/tabel
     const prompt = `Saya punya bahan-bahan ini di kulkas: ${ingredients}. Tolong buatkan SATU ide resep masakan Indonesia yang lezat, hemat, dan mudah dibuat menggunakan bahan tersebut. Sertakan nama masakan dan cara masak singkat. Jawab dalam Bahasa Indonesia. JANGAN gunakan format tabel atau heading markdown (#).`;
     const response = await callGeminiAPI(prompt);
     setRecipe(response);
@@ -447,41 +441,62 @@ const MealTool = () => {
   );
 };
 
-// --- PRODUCT & CHECKOUT (No Changes needed) ---
-const ProductCard = ({ product, onBuy }) => (
-  <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
-    <div className="h-48 bg-blue-100 flex items-center justify-center">
-      <Calendar className="w-20 h-20 text-blue-300" />
-    </div>
-    <div className="p-6 flex flex-col flex-grow">
-      <div className="flex items-center justify-between mb-2">
-        <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full uppercase tracking-wide">
-          {product.category}
-        </span>
-        <span className="text-lg font-bold text-blue-900">
-          Rp {product.price.toLocaleString()}
-        </span>
+// --- PRODUCT & CHECKOUT (Updated with Robust Image Support) ---
+const ProductCard = ({ product, onBuy }) => {
+  const [imgError, setImgError] = useState(false);
+
+  return (
+    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
+      <div className="h-48 bg-blue-100 flex items-center justify-center overflow-hidden relative">
+        {/* Render Gambar: Cek jika ada property image dan belum error */}
+        {product.image && !imgError ? (
+          <img 
+            src={product.image} 
+            alt={product.title} 
+            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              e.target.onerror = null; // Mencegah loop infinite
+              setImgError(true); // Ganti state jadi error agar fallback muncul
+            }}
+          />
+        ) : (
+          /* Fallback jika gambar error/tidak ada */
+          <div className="flex flex-col items-center justify-center text-blue-300">
+             <Calendar className="w-16 h-16 mb-2 opacity-60" />
+             <span className="text-xs font-medium uppercase tracking-wide">Preview Image</span>
+          </div>
+        )}
       </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-2">{product.title}</h3>
-      <p className="text-gray-600 text-sm mb-4 flex-grow">{product.description}</p>
-      <ul className="mb-6 space-y-2">
-        {product.features.slice(0, 3).map((feat, idx) => (
-          <li key={idx} className="flex items-center text-sm text-gray-500">
-            <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-            {feat}
-          </li>
-        ))}
-      </ul>
-      <button 
-        onClick={() => onBuy(product)}
-        className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
-      >
-        <ShoppingBag className="w-4 h-4 mr-2" />
-        Beli Sekarang
-      </button>
+      <div className="p-6 flex flex-col flex-grow">
+        <div className="flex items-center justify-between mb-2">
+          <span className="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-semibold rounded-full uppercase tracking-wide">
+            {product.category}
+          </span>
+          <span className="text-lg font-bold text-blue-900">
+            Rp {product.price.toLocaleString()}
+          </span>
+        </div>
+        <h3 className="text-xl font-bold text-gray-900 mb-2">{product.title}</h3>
+        <p className="text-gray-600 text-sm mb-4 flex-grow">{product.description}</p>
+        <ul className="mb-6 space-y-2">
+          {product.features.slice(0, 3).map((feat, idx) => (
+            <li key={idx} className="flex items-center text-sm text-gray-500">
+              <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+              {feat}
+            </li>
+          ))}
+        </ul>
+        <button 
+          onClick={() => onBuy(product)}
+          className="w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+        >
+          <ShoppingBag className="w-4 h-4 mr-2" />
+          Beli Sekarang
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const CheckoutModal = ({ product, onClose }) => {
   const [name, setName] = useState('');

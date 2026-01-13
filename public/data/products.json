@@ -28,12 +28,12 @@
   },
 
   {
-    "id": 3,
+    "id": 4,
     "title": "Holiday Planner",
     "price": 35000,
     "category": "Travel",
     "description": "Hitung estimasi biaya, tabungan bulanan, dan checklist Liburan Menyenangkan.",
     "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Tips"],
-    "image": "/img-holiday-planner-2026.png"
+    "image": "holiday-planner-2026.png"
   }
 ]
