@@ -26,7 +26,6 @@
     "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Doa Harian"],
     "image": "umrah-sheet"
   },
-
   {
     "id": 4,
     "title": "Holiday Planner",
@@ -34,6 +33,15 @@
     "category": "Travel",
     "description": "Hitung estimasi biaya, tabungan bulanan, dan checklist Liburan Menyenangkan.",
     "features": ["Kalkulator Kurs", "Itinerary Builder", "Checklist Perlengkapan", "Tips"],
-    "image": "holiday-planner-2026.png"
+    "image": "./images/holiday-planner-2026.png"
+  },
+  {
+    "id": 5,
+    "title": "Education Budget Tracker",
+    "price": 35000,
+    "category": "Finance",
+    "description": "Rencanakan tabungan pendidikan untuk masadepan yang nyaman.",
+    "features": ["Kalkulator Kurs", "Checklist Perlengkapan", "Tips"],
+    "image": "https://placehold.co/1200x627/0077B5/ffffff.jpg?text=Education%20Budget%20Tracker&font=ubuntu"
   }
 ]

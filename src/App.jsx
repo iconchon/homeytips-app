@@ -451,7 +451,7 @@ const ProductCard = ({ product, onBuy }) => {
         {/* Render Gambar: Cek jika ada property image dan belum error */}
         {product.image && !imgError ? (
           <img 
-            src={`./images/${product.image}`} 
+            src={product.image} 
             alt={product.title} 
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
             onError={(e) => {
